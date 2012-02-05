@@ -1,6 +1,16 @@
 # Blueprint:
 # 
 {
+    "all": {
+        "description":  "Build the whole project",
+        "input":        { "tasks": [ "concat-js", "concat-css"] }
+    },
+    "min-js": {
+        "description":  "Minify JS",
+        "input":        { "outputs": "concat-js" },
+        "output":       "lib/app.min.js",
+        "exec":         "minjs $inputs"
+    },
     "coffee": {
         "description":  "Compile Coffee Scripts",
         "input":        "src/*.coffee",
@@ -9,15 +19,9 @@
     },
     "concat-js": {
         "description":  "Concatenate JS into 1 file",
-        "input":        { "outputs": "coffee" },
+        "input":        [ "src/*.js", { "outputs": "coffee" } ],
         "output":       "lib/app.js",
         "exec":         "cat $inputs > $output"
-    },
-    "less": {
-        "description":  "Compile Less Styles",
-        "input":        "style/src/*.less",
-        "output":       "style/css/$1.css",
-        "multiexec":    "less -o $output $input"
     },
     "concat-css": {
         "description":  "Concatenate css into 1 file",
@@ -25,40 +29,42 @@
         "output":       "style/css/app.css",
         "exec":         "cat $inputs > $output"
     },
-    "all": {
-        "description":  "Build the whole project",
-        "input":        { "tasks": [ "concat-js", "concat-css"] }
+    "less": {
+        "description":  "Compile Less Styles",
+        "input":        "style/src/*.less",
+        "output":       "style/css/$1.css",
+        "multiexec":    "less -o $output $input"
     }
 }
 # Work order:
 # [
 #     {   
-#         "depends":      [],
+#         "input":      [],
 #         "output":       "src/a.coffee",
 #         "task":         null
 #     },
 #     {
-#         "depends":      ["src/a.coffee"],
+#         "input":      ["src/a.coffee"],
 #         "output":       "lib/a.js",
 #         "task":         "coffee",
 #         "exec":         "coffee -o lib/a.js src/a.coffee"
 #     },
 #     {
-#         "depends":      ["lib/b.js"],
+#         "input":      ["lib/b.js"],
 #         "task":         "coffee",
-#         "depends":      "src/b.coffee",
+#         "input":      "src/b.coffee",
 #         "exec":         "coffee -o lib/b.js src/b.coffee"
 #     },
 #     {
-#         "depends":      ["lib/a.js", "lib/b.js"],
+#         "input":      ["lib/a.js", "lib/b.js"],
 #         "output":       "lib/app.js"
 #         "task":         "concat-js",
 #         "exec":         "cat lib/a.js lib/b.js > lib/app.js"
 #     },
 #     "#js": {
-#         "depends":      ["lib/app.js"]
+#         "input":      ["lib/app.js"]
 #     }
 #     "#all": {
-#         "depends":      ["#js"]
+#         "input":      ["#js"]
 #     }
 # ]
