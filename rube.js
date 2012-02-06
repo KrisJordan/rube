@@ -3,7 +3,8 @@ var _       = require('underscore'),
     fs      = require('fs'),
     async   = require('async'),
     util    = require('util'),
-    glob    = require('glob');
+    glob    = require('glob'),
+    events  = require('events');
 
 var rubefile = JSON.parse(fs.readFileSync('Rubefile.json', 'utf8').replace(/\#.*$/mg,''));
 
@@ -136,21 +137,25 @@ var rubefileToWorkOrder = function(rubefile, cb) {
                                 inputTasks;
                             switch(inputKeys[0]) {
                                 case "task":
-                                    inputTasks = [input.task];
+                                    inputTasks = input.task;
                                     break;
                                 case "tasks":
                                     inputTasks = input.tasks;
                                     break;
                                 case "outputs":
-                                    inputTasks = [input.outputs];
+                                    inputTasks = input.outputs;
                                     break;
                                 default:
                                     throw "TODO: useful error message."
                             }
+                            inputTasks = _.isArray(inputTasks) ? inputTasks : [inputTasks];
                             if(
                                 _.all(
                                     inputTasks,
                                     function(inputTask) {
+                                        console.log('here');
+                                        console.log(inputTasks);
+                                        console.log(inputTask);
                                         return rubefile[inputTask]._processingComplete;
                                     })
                             ) {
@@ -275,6 +280,10 @@ async.waterfall(
         function(workorder, cb) {
             var device = new Device(workorder);
             device.scheduleWork();
+            device.on('complete', function() {
+                console.log('complete');
+                device.touch('lib/b.js');
+            });
         }// ,
         // function(workorder) {
         //     console.log(workorder);
@@ -285,6 +294,10 @@ async.waterfall(
     }
 );
 
+var arrayify = function(value) {
+    return _.isArray(value) ? value : [value];
+}
+
 var Device = function(workorder) {
     var device        = this;
     device.workorder  = workorder;
@@ -293,7 +306,12 @@ var Device = function(workorder) {
         device.incomplete = _.without(device.incomplete, item);
         device.complete.push(item);
         item.q = false;
-        device.scheduleWork();
+        
+        if(device.incomplete.length === 0) {
+            this.emit('complete');
+        } else {
+            device.scheduleWork();
+        }
     };
     device.q          = async.queue(function(item, cb) {
         console.log('begin:    ' + item.exec);
@@ -301,11 +319,28 @@ var Device = function(workorder) {
             console.log('complete: ' + item.exec);
             device.completed(null, item);
             cb();
-        }, 1000);
-    }, 1);
+        }, 100);
+    }, 4);
     device.complete   = [];
+    device.touch = function(file) {
+        // do something
+        // cases: source or output file
+        var inputTasks  = [],
+            outputTasks = [];
+        _.each(device.workorder, function(item) {
+            var inputs = arrayify(item.input);
+            if(_.indexOf(inputs, file) >= 0) {
+                inputTasks.push(item);
+            }
+            if(_.isEqual(item.output, file)) {
+                outputTasks.push(item);
+            }
+        });
+        console.log(inputTasks);
+        console.log(outputTasks);
+    };
 };
-Device.fn = Device.prototype;
+Device.fn = Device.prototype = new events.EventEmitter;
 Device.fn.scheduleWork = function() {
     var incomplete = this.incomplete;
 
@@ -340,7 +375,7 @@ Device.fn.scheduleWork = function() {
             q.push(item);
         });
     } else {
-        if(!_.any(incomplete, function(item) { return item.q === true; })) {
+         if(!_.any(incomplete, function(item) { return item.q === true; })) {
             throw "Error processing queue.";
         }
     }

@@ -3,7 +3,9 @@
 {
     "all": {
         "description":  "Build the whole project",
-        "input":        { "tasks": [ "concat-js", "concat-css"] }
+        "input":        { "outputs": [ "concat-js", "concat-css"] },
+        "output":       "onepage.html",
+        "exec":         "bundle $inputs > $output"
     },
     "min-js": {
         "description":  "Minify JS",
