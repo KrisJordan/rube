@@ -3,7 +3,7 @@
 {
     "all": {
         "description":  "Build the whole project",
-        "input":        { "outputs": [ "concat-js", "concat-css"] },
+        "input":        { "outputs": [ "min-js", "concat-css"] },
         "output":       "onepage.html",
         "exec":         "bundle $inputs > $output"
     },
