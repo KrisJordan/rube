@@ -1,5 +1,4 @@
 # Blueprint:
-# 
 {
     "all": {
         "description":  "Build the whole project",
@@ -23,7 +22,7 @@
         "description":  "Concatenate JS into 1 file",
         "input":        [ "src/*.js", { "outputs": "coffee" } ],
         "output":       "lib/app.js",
-        "exec":         "cat $inputs > $output"
+        "exec":         "cat $input > $output"
     },
     "concat-css": {
         "description":  "Concatenate css into 1 file",
@@ -36,6 +35,10 @@
         "input":        "style/src/*.less",
         "output":       "style/css/$1.css",
         "multiexec":    "less -o $output $input"
+    },
+    "clean": {
+        "description":  "Clean up generated files",
+        "exec":         "rm -f lib/*.js style/css/*.css"
     }
 }
 # Work order:
