@@ -4,7 +4,8 @@ var _       = require('underscore'),
     async   = require('async'),
     util    = require('util'),
     glob    = require('glob'),
-    events  = require('events');
+    events  = require('events'),
+    optimist= require('optimist');
 
 var rubefile = JSON.parse(fs.readFileSync('Rubefile.json', 'utf8').replace(/\#.*$/mg,''));
 
@@ -318,6 +319,38 @@ var rubefileToWorkOrder = function(rubefile, task, cb) {
 };
 
 var hasTouched = false;
+
+optimist = optimist
+                .usage('Usage: $0 [options] [tasks]')
+                .boolean(['v','w'])
+                .options('v', {
+                    alias: 'verbose',
+                    describe: 'print all successful commands run',
+                    default: false
+                })
+                .options('w', {   
+                    alias: 'watch',
+                    describe: 'run automatically when files change',
+                    default: false
+                });
+
+var argv = optimist.argv;
+
+if(argv._.length <= 0) {
+    optimist.showHelp();
+    var tasks = _.keys(rubefile);
+    var tasklen = _.max(tasks, function(task) { return task.length; }).length;
+    console.error('Tasks:');
+    _.each(tasks, function(task) {
+        var description = rubefile[task].description ? rubefile[task].description : '';
+        console.error("  " + rpad(task,' ',tasklen) + "  " + description);
+    });
+} else {
+    console.log(argv._);    
+    console.log(argv.w);
+    console.log(argv.v);
+}
+process.exit();
 
 async.waterfall(
     [
