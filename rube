@@ -324,14 +324,19 @@ optimist = optimist
                 .usage('Usage: $0 [options] [tasks]')
                 .boolean(['v','w'])
                 .options('v', {
-                    alias: 'verbose',
-                    describe: 'print all successful commands run',
-                    default: false
+                    alias:      'verbose',
+                    describe:   'print all successful commands run',
+                    default:    false
                 })
                 .options('w', {   
-                    alias: 'watch',
-                    describe: 'run automatically when files change',
-                    default: false
+                    alias:      'watch',
+                    describe:   'run automatically when files change',
+                    default:    false
+                })
+                .options('p', {
+                    alias:      'parallel',
+                    describe:   'number of tasks to run in parallel',
+                    default:    2
                 });
 
 var argv = optimist.argv;
