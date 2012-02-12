@@ -1,14 +1,18 @@
 {
-  "author":         "Kris Jordan <krisjordan@gmail.com> (http://krisjordan.com)",
   "name":           "rube",
-  "description":    "A build system for interactive development.",
+  "description":    "A simple, flexible, interactive, parallel build system.",
+  "keywords":       ["build","make","watch","parallel build"],
+  "author":         "Kris Jordan <krisjordan@gmail.com> (http://krisjordan.com)",
   "version":        "0.0.1",
   "repository":     {
         "type": "git",
         "url": "git://github.com/KrisJordan/rube.git"
   },
   "engines": {
-        "node": "~0.6.0"
+        "node": ">=0.4.0"
+  },
+  "bin": {
+        "rube": "./bin/rube"
   },
   "dependencies": {
     "underscore":   "1.3.1",
