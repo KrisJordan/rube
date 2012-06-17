@@ -1,0 +1,14 @@
+{ 
+    "test": {
+        "description":  "Example test command",
+        "input":    "src/*.js",
+        "output":   "lib/$1.js",
+        "exec":     ""
+    },
+    "dep": {
+        "description": "Dependent task",
+        "input": {"output":"test"},
+        "output": "foo.js",
+        "exec": ""
+    }
+}

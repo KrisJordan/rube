@@ -29,6 +29,9 @@ var fs              = require('fs'),
 // Now let's alias the functions we depend on for convenient access.
     find            = _.find,
     each            = _.each,
+    isObject        = _.isObject,
+    keys            = _.keys,
+    max             = _.max,
     permute         = rubeUtil.permute,
     parentDirs      = rubeUtil.parentDirs,
     padRight        = rubeUtil.padRight,
@@ -57,14 +60,6 @@ exports.main = main = function() {
         exitError('Could not find Rubefile');
     }
 
-    // Instantiate a `RubeFile` with the contents of our `Rubefile`.
-    try {
-        var rubefileContents = fs.readFileSync(rubefilePath, 'utf8'),
-            rubefile         = new RubeFile(rubefileContents);
-    } catch(e) {
-        exitError(e);
-    }
-    
     // Parse command line options using optimist.
     var opt         = parseOptions(),
         argv        = opt.argv,
@@ -74,24 +69,37 @@ exports.main = main = function() {
             dry:        argv.d,
             parallel:   argv.p
         },
-        tasks       = argv._;
+        targets     = argv._;
 
-    // If no tasks are specified, we display the command's help which
-    // includes descriptions of the tasks defined in the Rubefile.
-    if(tasks.length <= 0) {
-        showCommandHelp(opt, rubefile);
-        exitError("Must specify at least one task.");
-    }
-
-    // A `RubeDevice` is constructed from the `RubeFile`'s instructions
-    // for targeting specific tasks.
+    // Instantiate a `RubeFile` with the contents of our `Rubefile`.
     try {
-        rubefile.instructions(tasks, function(instructions) {
-            (new RubeDevice(instructions, options)).run();
-        });
+        var rubefileContents = fs.readFileSync(rubefilePath, 'utf8'),
+            rubefile         = new RubeFile(rubefileContents);
     } catch(e) {
         exitError(e);
     }
+
+    // If no target tasks are specified, or the targets are invalid
+    // we display `rube` help which includes descriptions of the tasks
+    // defined in the Rubefile.
+    try{
+        if(targets.length <= 0) {
+            throw("Must specify at least one target task.");
+        }
+        rubefile.target(targets);
+    } catch(e) {
+        showCommandHelp(opt, rubefile);
+        exitError(e);
+    }
+
+    // A `RubeDevice` is constructed from a `RubeFile` definition
+    // for targeting specific tasks.
+    try {
+        (new RubeDevice(rubefile, options)).run();
+    } catch(e) {
+        exitError(e);
+    }
+
 };
 
 // It is nice to be able to run rube from any place within a project's
@@ -139,14 +147,14 @@ showCommandHelp = function(optimist,rubefile) {
      // `optimist` will display the help information on usage and flags.
      optimist.showHelp();
      // We'll display the help information on the tasks in the Rubefile.
-     var tasks = rubefile.tasks();
+     var tasks      = rubefile.tasks();
      console.error("Tasks:");
-     if(tasks.length > 0) {
-         var tasknames  = _.keys(rubefile.tasks()),
-             tasklen    = _.max(tasknames, function(task) { return task.length; }).length;
-         each(tasks, function(task) {
-             var description = rubefile.describe(task) ? rubefile.describe(task) : '';
-             console.error("  " + padRight(task,' ',tasklen) + "  " + description);
+     if(isObject(tasks)) {
+         var tasknames  = keys(tasks),
+             tasklen    = max(tasknames, function(task) { return task.length; }).length;
+         each(tasks, function(task,taskname) {
+             var description = task.description ? task.description : '';
+             console.error("  " + padRight(taskname,' ',tasklen) + "  " + description);
          });
     } else {
         console.error("  No task definitions found in the Rubefile.");
